@@ -84,6 +84,65 @@ NWyN0RsTXFaqowV1/HSyvfD7LoF/CrmN5gOAM3Ierv/Ti9uqGVhdGBd/kw=='
     end
   end
 
+  context 'with all the parameters' do
+    let(:fetch_clone_command) { 'cibadmin --query --xpath /cib/configuration/resources/clone[@id="duncan_vip_complex_clone"]' }
+    it 'creates the clone' do
+      pp = <<-EOS
+         cs_clone { 'duncan_vip_complex_clone':
+           ensure => present,
+           primitive => 'duncan_vip',
+           clone_max => 42,
+           clone_node_max => 2,
+           notify_clones => false,
+           globally_unique => true,
+           ordered => false,
+           interleave => false,
+         }
+      EOS
+      apply_manifest(pp, catch_failures: true, debug: true, trace: true)
+      apply_manifest(pp, catch_changes: true, debug: false, trace: true)
+      shell(fetch_clone_command) do |r|
+        expect(r.stdout).to match(%r{<clone})
+      end
+    end
+
+    it 'sets clone_max' do
+      shell(fetch_clone_command) do |r|
+        expect(r.stdout).to match(%r{clone-max="42"})
+      end
+    end
+
+    it 'sets clone_node_max' do
+      shell(fetch_clone_command) do |r|
+        expect(r.stdout).to match(%r{clone-node-max="2"})
+      end
+    end
+
+    it 'sets notify_clones' do
+      shell(fetch_clone_command) do |r|
+        expect(r.stdout).to match(%r{notify="false"})
+      end
+    end
+
+    it 'sets globally_unique' do
+      shell(fetch_clone_command) do |r|
+        expect(r.stdout).to match(%r{globally-unique="true"})
+      end
+    end
+
+    it 'sets ordered' do
+      shell(fetch_clone_command) do |r|
+        expect(r.stdout).to match(%r{ordered="false"})
+      end
+    end
+
+    it 'sets interleave' do
+      shell(fetch_clone_command) do |r|
+        expect(r.stdout).to match(%r{interleave="false"})
+      end
+    end
+  end
+
   after :all do
     cleanup_cs_resources
   end
